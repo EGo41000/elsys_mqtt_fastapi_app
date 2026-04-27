@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from datetime import datetime
-import json, requests, os
+import json, requests, os, psycopg
 from dotenv import load_dotenv  # pip install python-dotenv
 
 load_dotenv()
@@ -26,6 +26,19 @@ TTN_URL = f"https://eu1.cloud.thethings.network/api/v3/as/applications/{TTN_APP_
 headers={'Authorization': f"Bearer {TTN_API_KEY}", 'Accept': 'text/event-stream'}
 
 print(f"{TTN_URL=}")
+
+POSTGRES_URL = os.getenv("POSTGRES_URL")
+print(f"{POSTGRES_URL=}")
+try:
+    conn_dict =  psycopg.conninfo.conninfo_to_dict(POSTGRES_URL)
+
+    with psycopg.connect(**conn_dict) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""select dt::varchar, "data"->'result'->'uplink_message'->'decoded_payload' as X from logs""")
+            for row in cur:
+                print(row)
+except Exception:
+    print('Exception...')
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
