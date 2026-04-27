@@ -25,6 +25,8 @@ TTN_API_KEY = os.getenv("TTN_API_KEY", "api_key")
 TTN_URL = f"https://eu1.cloud.thethings.network/api/v3/as/applications/{TTN_APP_ID}/devices/{TTN_DEVICE_ID}/packages/storage/uplink_message?last=24h"
 headers={'Authorization': f"Bearer {TTN_API_KEY}", 'Accept': 'text/event-stream'}
 
+print(f"{TTN_URL=}")
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
 
