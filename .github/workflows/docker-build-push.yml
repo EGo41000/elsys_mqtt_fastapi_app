@@ -87,9 +87,9 @@ jobs:
         run: |
           
           # Wait for rollout to complete
-          kubectl rollout restart deployment/elsys-devel -n elsys
+          kubectl --insecure-skip-tls-verify rollout restart deployment/elsys-devel -n elsys
 
       - name: Verify deployment
         run: |
-          kubectl get pods -n elsys
-          kubectl get deployment elsys-devel -n elsys -o wide
+          kubectl --insecure-skip-tls-verify get pods -n elsys
+          kubectl --insecure-skip-tls-verify get deployment elsys-devel -n elsys -o wide
