@@ -87,7 +87,7 @@ jobs:
         run: |
           
           # Wait for rollout to complete
-          kubectl rollout restart deployment/elsys-devel -n elsys --timeout=60s
+          kubectl rollout restart deployment/elsys-devel -n elsys
 
       - name: Verify deployment
         run: |
