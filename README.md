@@ -20,3 +20,11 @@ sudo kubectl apply -f elsys-deployment.yaml
 sudo kubectl rollout restart deployment/elsys-devel -n elsys
 
 sudo kubectl logs deployment.apps/elsys-devel -n elsys
+
+## Déploy CI/CD
+création k3s.yaml :  
+`sudo cat /etc/rancher/k3s/k3s.yaml`  
+Modifier pour : server: https://centreia.fr:6443 (upd box)
+`cat k3s.yaml | base64 -w 0`
+Mettre en secret dans KUBECONFIG  
+Les commandes kubectl utilisent --insecure-skip-tls-verify
