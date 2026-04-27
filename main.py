@@ -38,9 +38,9 @@ async def read_root(request: Request):
         dp = result.get('uplink_message').get('decoded_payload')
         #data.append({})
         dp['time'] = result.get('received_at')
-        print(json.dumps(dp, indent=2))
+        #print(json.dumps(dp, indent=2))
         data.append(dp)
-    print(f"[{r.status_code}] {len(data)} lines")
+    print(f"TTN [{r.status_code}] {len(data)} lines")
 
     # Préparer les données pour les graphiques
     times = [item["time"] for item in data]
