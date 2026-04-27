@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord Tomates</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .stats {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .none {display:none;}
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📊 Tableau de Tomates</h1>
+
+    <div class="grid">
+        <!-- Graphique Capteurs de Température Externe 2 -->
+        <div class="card full-width">
+            <h2>📊 Capteurs de Température</h2>
+            <div id="externalTemp2Chart"></div>
+        </div>
+
+        <!-- Graphique Humidité -->
+        <div class="card">
+            <h2>💧 Humidité</h2>
+            <div id="humidityChart"></div>
+        </div>
+
+        <!-- Graphique Pression -->
+        <div class="card">
+            <h2>📈 Pression Atmosphérique</h2>
+            <div id="pressureChart"></div>
+        </div>
+
+        <!-- Graphique Tension (VDD) -->
+        <div class="card">
+            <h2>⚡ Tension d'Alimentation</h2>
+            <div id="vddChart"></div>
+        </div>
+
+        <!-- Graphique Température Externe vs Interne -->
+        <div class="card none">
+            <h2>🌡️ Températures</h2>
+            <div id="temperatureChart"></div>
+        </div>
+
+    </div>
+
+    <!-- Tableau des données -->
+    <div class="card">
+        <h2>📋 Données Détailées</h2>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                <tr>
+                    <th>Date/Heure</th>
+                    <th>Temp. Extérieure 2 (0)</th>
+                    <th>Temp. Extérieure 2 (1)</th>
+                    <th>Temp. Extérieure 2 (2)</th>
+                    <th>Temp. Extérieure 2 (3)</th>
+                    <th>Humidité</th>
+                    <th>Pression</th>
+                    <th>Temp. Intérieure</th>
+                    <th>VDD</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in data_table %}
+                <tr>
+                    <td>{{ item.time }}</td>
+                    <td>{{ item.externalTemperature }}°C</td>
+                    <td>{{ item.externalTemperature2[0] }}°C</td>
+                    <td>{{ item.externalTemperature2[1] }}°C</td>
+                    <td>{{ item.externalTemperature2[2] }}°C</td>
+                    <td>{{ item.humidity }}%</td>
+                    <td>{{ item.pressure }} hPa</td>
+                    <td>{{ item.temperature }}°C</td>
+                    <td>{{ item.vdd }} mV</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Récupérer les données du backend
+    const times = {{ times | safe }};
+    const externalTemp = {{ external_temp | safe }};
+    const temperature = {{ temperature | safe }};
+    const humidity = {{ humidity | safe }};
+    const pressure = {{ pressure | safe }};
+    const vdd = {{ vdd | safe }};
+    const externalTemp2_1 = {{ external_temp2_1 | safe }};
+    const externalTemp2_2 = {{ external_temp2_2 | safe }};
+    const externalTemp2_3 = {{ external_temp2_3 | safe }};
+
+    // Graphique Températures
+    const extTemp2Trace0 = {
+        x: times,
+        y: externalTemp,
+        name: 'Capteur 0',
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: { color: '#99ccff', width: 2 },
+        marker: { size: 8 }
+    };
+
+    const tempTrace2 = {
+        x: times,
+        y: temperature,
+        name: 'Température',
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: { color: '#cc99ff', width: 2 },
+        marker: { size: 8 }
+    };
+
+    // Graphique External Temperature 2
+    const extTemp2Trace1 = {
+        x: times,
+        y: externalTemp2_1,
+        name: 'Capteur 1',
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: { color: '#FF6B6B', width: 2 }
+    };
+
+    const extTemp2Trace2 = {
+        x: times,
+        y: externalTemp2_2,
+        name: 'Capteur 2',
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: { color: '#4ECDC4', width: 2 }
+    };
+
+    const extTemp2Trace3 = {
+        x: times,
+        y: externalTemp2_3,
+        name: 'Capteur 3',
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: { color: '#F7B731', width: 2 }
+    };
+
+    Plotly.newPlot('externalTemp2Chart', [extTemp2Trace0, extTemp2Trace1, extTemp2Trace2, extTemp2Trace3, tempTrace2], {
+        title: 'Capteurs de Température',
+        xaxis: { title: 'Temps' },
+        yaxis: { title: 'Température (°C)' }
+    });
+
+    Plotly.newPlot('temperatureChart', [tempTrace2], {
+        title: 'Évolution des Températures',
+        xaxis: { title: 'Temps' },
+        yaxis: { title: 'Température (°C)' },
+        hovermode: 'closest'
+    });
+
+    // Graphique Humidité
+    Plotly.newPlot('humidityChart', [{
+        x: times,
+        y: humidity,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Humidité',
+        line: { color: '#45B7D1', width: 2 },
+        marker: { size: 8 },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(69, 183, 209, 0.2)'
+    }], {
+        title: 'Évolution de l\'Humidité',
+        xaxis: { title: 'Temps' },
+        yaxis: { title: 'Humidité (%)', range: [0, 100] }
+    });
+
+    // Graphique Pression
+    Plotly.newPlot('pressureChart', [{
+        x: times,
+        y: pressure,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Pression',
+        line: { color: '#F7B731', width: 2 },
+        marker: { size: 8 }
+    }], {
+        title: 'Évolution de la Pression',
+        xaxis: { title: 'Temps' },
+        yaxis: { title: 'Pression (hPa)' }
+    });
+
+    // Graphique VDD
+    Plotly.newPlot('vddChart', [{
+        x: times,
+        y: vdd,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Tension',
+        line: { color: '#A55EEA', width: 2 },
+        marker: { size: 8 }
+    }], {
+        title: 'Évolution de la Tension',
+        xaxis: { title: 'Temps' },
+        yaxis: { title: 'Tension (mV)' }
+    });
+
+
+
+</script>
+</body>
+</html>
