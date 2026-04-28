@@ -20,9 +20,10 @@ templates = Jinja2Templates(directory="templates")
 TTN_APP_ID = os.getenv("TTN_APP_ID", "app_id")
 TTN_DEVICE_ID = os.getenv("TTN_DEVICE_ID", "device_id")
 TTN_API_KEY = os.getenv("TTN_API_KEY", "api_key")
+TTN_TIME = os.getenv("TTN_TIME", "72h")
 
 # URL pour les données TTN (V3)
-TTN_URL = f"https://eu1.cloud.thethings.network/api/v3/as/applications/{TTN_APP_ID}/devices/{TTN_DEVICE_ID}/packages/storage/uplink_message?last=24h"
+TTN_URL = f"https://eu1.cloud.thethings.network/api/v3/as/applications/{TTN_APP_ID}/devices/{TTN_DEVICE_ID}/packages/storage/uplink_message?last={TTN_TIME}"
 headers={'Authorization': f"Bearer {TTN_API_KEY}", 'Accept': 'text/event-stream'}
 
 print(f"{TTN_URL=}")
