@@ -44,35 +44,17 @@ except Exception:
     print('Exception...')
 
 def convert_to_paris_time(utc_time_str):
-    """Convertit une chaîne UTC en heure de Paris (format ISO)"""
+    """Convertit UTC en heure de Paris"""
     try:
-        # Nettoyer la chaîne de temps
-        # Supprimer le 'Z' final si présent
-        if utc_time_str.endswith('Z'):
-            utc_time_str = utc_time_str[:-1]
+        # Remplacer Z par +00:00 et tronquer à 23 caractères (YYYY-MM-DDTHH:MM:SS)
+        clean_time = utc_time_str.replace('Z', '')[:19]  # Garde jusqu'à la seconde
+        utc_time = datetime.fromisoformat(clean_time + '+00:00')
 
-        # Gérer les nanosecondes (plus de 6 décimales)
-        if '.' in utc_time_str:
-            parts = utc_time_str.split('.')
-            # Garder seulement les 6 premiers chiffres des microsecondes
-            if len(parts[1]) > 6:
-                parts[1] = parts[1][:6]
-            utc_time_str = '.'.join(parts)
-
-        # Parser le temps UTC
-        utc_time = datetime.fromisoformat(utc_time_str)
-
-        # Définir le fuseau horaire UTC
-        utc_time = utc_time.replace(tzinfo=pytz.UTC)
-
-        # Convertir en heure de Paris
         paris_tz = pytz.timezone("Europe/Paris")
         paris_time = utc_time.astimezone(paris_tz)
 
-        # Retourner au format lisible sans microsecondes
         return paris_time.strftime("%Y-%m-%d %H:%M:%S")
-    except Exception as e:
-        print(f"Erreur conversion temps pour '{utc_time_str}': {e}")
+    except:
         return utc_time_str
 
 @app.get("/", response_class=HTMLResponse)
