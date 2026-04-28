@@ -4,7 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from datetime import datetime
 import json, requests, os, psycopg
-from dotenv import load_dotenv  # pip install python-dotenv
+from dotenv import load_dotenv
+import pytz  # pip install pytz
 
 load_dotenv()
 
@@ -37,9 +38,42 @@ try:
         with conn.cursor() as cur:
             cur.execute("""select dt::varchar, "data"->'result'->'uplink_message'->'decoded_payload' as X from logs""")
             for row in cur:
-                print(row)
+                #print(row)
+                pass
 except Exception:
     print('Exception...')
+
+def convert_to_paris_time(utc_time_str):
+    """Convertit une chaîne UTC en heure de Paris (format ISO)"""
+    try:
+        # Nettoyer la chaîne de temps
+        # Supprimer le 'Z' final si présent
+        if utc_time_str.endswith('Z'):
+            utc_time_str = utc_time_str[:-1]
+
+        # Gérer les nanosecondes (plus de 6 décimales)
+        if '.' in utc_time_str:
+            parts = utc_time_str.split('.')
+            # Garder seulement les 6 premiers chiffres des microsecondes
+            if len(parts[1]) > 6:
+                parts[1] = parts[1][:6]
+            utc_time_str = '.'.join(parts)
+
+        # Parser le temps UTC
+        utc_time = datetime.fromisoformat(utc_time_str)
+
+        # Définir le fuseau horaire UTC
+        utc_time = utc_time.replace(tzinfo=pytz.UTC)
+
+        # Convertir en heure de Paris
+        paris_tz = pytz.timezone("Europe/Paris")
+        paris_time = utc_time.astimezone(paris_tz)
+
+        # Retourner au format lisible sans microsecondes
+        return paris_time.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception as e:
+        print(f"Erreur conversion temps pour '{utc_time_str}': {e}")
+        return utc_time_str
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -52,8 +86,9 @@ async def read_root(request: Request):
         x=json.loads(line)
         result = x.get('result')
         dp = result.get('uplink_message').get('decoded_payload')
-        #data.append({})
-        dp['time'] = result.get('received_at')
+        # Convertir le temps UTC en heure de Paris
+        utc_time = result.get('received_at')
+        dp['time'] = convert_to_paris_time(utc_time)
         #print(json.dumps(dp, indent=2))
         data.append(dp)
     print(f"TTN [{r.status_code}] {len(data)} lines")
