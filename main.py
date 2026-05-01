@@ -57,6 +57,10 @@ def convert_to_paris_time(utc_time_str):
     except:
         return utc_time_str
 
+@app.get("/health", tags=['health'])
+def get_health():
+    return "OK"
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
 
