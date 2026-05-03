@@ -11,9 +11,6 @@ load_dotenv()
 
 app = FastAPI()
 
-# Monter les fichiers statiques (optionnel)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 # Configurer les templates
 templates = Jinja2Templates(directory="templates")
 
@@ -108,6 +105,8 @@ async def read_root(request: Request):
             "data_table": data
         }
     )
+
+app.mount("/", StaticFiles(directory="static"), name="static")
 
 if __name__ == "__main__":
     import uvicorn
